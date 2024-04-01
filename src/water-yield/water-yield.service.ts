@@ -30,9 +30,10 @@ export class WaterYieldService {
   }
 
   async findOne(id: number) {
-    const waterYield = await this.waterYieldRepository.findOne({
+    const waterYield = await this.waterYieldRepository.find({
       where: {
-        id
+        id,
+        isDel: false
       }
     });
     console.log(id, waterYield);

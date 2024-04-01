@@ -37,7 +37,7 @@ export class WaterQualityController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     const data = await this.waterQualityService.findOne(+id);
-    return new Result(Code.GET_OK, Message.Find_Success, [data]);
+    return new Result(Code.GET_OK, Message.Find_Success, data);
   }
 
   @Public()

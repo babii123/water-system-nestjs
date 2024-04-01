@@ -37,7 +37,8 @@ export class WaterService {
     const data = await this.waterRepository.find({
       where: {
         address: waterArea ? Like(`%${waterArea}%`) : undefined,
-        type: waterType ? waterType : undefined
+        type: waterType ? waterType : undefined,
+        isDel: false
       }
     })
     return data

@@ -8,5 +8,6 @@ import { SupplyPlan } from './entities/supply-plan.entity';
   imports: [TypeOrmModule.forFeature([SupplyPlan])],
   controllers: [SupplyPlanController],
   providers: [SupplyPlanService],
+  exports: [SupplyPlanService]
 })
 export class SupplyPlanModule {}

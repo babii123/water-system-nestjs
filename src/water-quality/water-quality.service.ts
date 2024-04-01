@@ -32,9 +32,10 @@ export class WaterQualityService {
   }
 
   async findOne(id: number) {
-    const waterQuality = await this.waterQualityRepository.findOne({
+    const waterQuality = await this.waterQualityRepository.find({
       where: {
         id,
+        isDel: false
       },
     });
     console.log(id, waterQuality);

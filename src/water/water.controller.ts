@@ -34,6 +34,7 @@ export class WaterController {
     return new Result(Code.GET_OK, Message.Find_Success, data);
   }
 
+  @Public()
   @Get('/getWater_dashboard')
   async getWaterCountToBashboard(){
     const data = await this.waterService.getWaterCountToBashboard()

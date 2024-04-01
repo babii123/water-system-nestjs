@@ -123,7 +123,7 @@ export class UserService {
       where: {
         email: email ? email : undefined,
         realName: realName ? realName : undefined,
-        phone: phone ? phone : undefined
+        phone: phone ? phone : undefined,
       }
     })
     return data

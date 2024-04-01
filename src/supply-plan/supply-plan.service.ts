@@ -35,7 +35,8 @@ export class SupplyPlanService {
     const data = await this.supplyPlanrRepository.find({
       where: {
         waterArea: waterArea ? Like(`%${waterArea}%`) : undefined,
-        waterPriceType: waterPriceType ? waterPriceType : undefined
+        waterPriceType: waterPriceType ? waterPriceType : undefined,
+        isDel: false
       }
     })
     return data

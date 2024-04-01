@@ -38,7 +38,7 @@ export class WaterYieldController {
   async findOne(@Param('id') id: string) {
     const data = await this.waterYieldService.findOne(+id);
     console.log([data]);
-    return new Result(Code.GET_OK, Message.Find_Success, [data]);
+    return new Result(Code.GET_OK, Message.Find_Success, data);
   }
 
   @Public()

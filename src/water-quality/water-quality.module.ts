@@ -8,5 +8,6 @@ import { WaterQuality } from './entities/water-quality.entity';
   imports: [TypeOrmModule.forFeature([WaterQuality])],
   controllers: [WaterQualityController],
   providers: [WaterQualityService],
+  exports: [WaterQualityService]
 })
-export class WaterQualityModule {}
+export class WaterQualityModule { }
