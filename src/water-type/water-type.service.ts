@@ -13,7 +13,7 @@ export class WaterTypeService {
   constructor(
     @InjectRepository(WaterType)
     private readonly waterTypeRepository: Repository<WaterType>,
-  ) {}
+  ) { }
 
   async create(createWaterTypeDto: CreateWaterTypeDto) {
     const waterType = this.waterTypeRepository.create(createWaterTypeDto);
@@ -46,9 +46,7 @@ export class WaterTypeService {
     return deleteResult(res);
   }
 
-  async removeMulti(
-    idList: number[],
-  ): Promise<{ code: number; msg: string; data: any }> {
+  async removeMulti(idList: number[]) {
     const waterTypes = await this.waterTypeRepository.find({
       where: { id: In(idList) },
     });

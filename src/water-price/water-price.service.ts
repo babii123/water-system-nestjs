@@ -5,6 +5,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { WaterPrice } from './entities/water-price.entity';
 
+const waterPriceIndex = {
+  '类型': 'type',
+  '基本水价': 'basicPrice',
+  '水资源费': 'resourceCost',
+  '污水处理费': 'pollutionCost',
+  '用户最终负担价格': 'realPrice',
+}
 @Injectable()
 export class WaterPriceService {
   constructor(
@@ -32,6 +39,10 @@ export class WaterPriceService {
 
   remove(id: number) {
     return `This action removes a #${id} waterPrice`;
+  }
+
+  async uploadFile(data) {
+    
   }
 
   async getWaterPriceToBashboard(){

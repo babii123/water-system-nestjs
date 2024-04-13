@@ -6,7 +6,7 @@ export class Water {
   id: number;
   @Column('varchar')
   type: string;
-  @Column({ type: 'varchar', name: 'water_name' })
+  @Column({ type: 'varchar', name: 'water_name', unique: true })
   waterName: string;
   @Column('varchar')
   address: string;

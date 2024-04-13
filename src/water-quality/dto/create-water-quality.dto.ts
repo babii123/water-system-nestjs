@@ -7,6 +7,7 @@ export class CreateWaterQualityDto {
   ph: number
   turbidity: number
   fluoride: number
+  cyanin: number
   isDel: boolean
   delReason: string
 }

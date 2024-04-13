@@ -7,6 +7,7 @@ import { In, Repository } from 'typeorm';
 import { deleteResult, updateResult } from 'src/Result/JudgeResult';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
+import { UserRole } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class WaterQualityService {
@@ -38,7 +39,6 @@ export class WaterQualityService {
         isDel: false
       },
     });
-    console.log(id, waterQuality);
     return waterQuality;
   }
 
@@ -55,16 +55,22 @@ export class WaterQualityService {
     return deleteResult(res);
   }
 
-  async removeMulti(idList: number[]) {
-    const waters = await this.waterQualityRepository.find({
-      where: { id: In(idList) },
-    });
-    const res = await this.waterQualityRepository.remove(waters);
-    return {
-      code: res ? Code.DELETE_OK : Code.DELETE_ERR,
-      msg: res ? Message.Del_Success : Message.Del_Fail,
-      data: res,
-    };
+  async removeMulti(idList: number[], delReason: string, roles: string[]) {
+    if (roles.includes(UserRole.ADMIN)) {
+      const waters = await this.waterQualityRepository.find({
+        where: { id: In(idList) },
+      });
+      const res = await this.waterQualityRepository.remove(waters);
+      return {
+        code: res ? Code.DELETE_OK : Code.DELETE_ERR,
+        msg: res ? Message.Del_Success : Message.Del_Fail,
+        data: res,
+      };
+    }else{
+      idList.forEach(async (id) => {
+        await this.deleteByDelReason(id, delReason);
+      })
+    }
   }
 
   async deleteByDelReason(id: number, delReason: string) {

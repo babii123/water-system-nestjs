@@ -18,6 +18,8 @@ import { WaterQualityModule } from './water-quality/water-quality.module';
 import { WaterPriceModule } from './water-price/water-price.module';
 import { ExportModule } from './export/export.module';
 import { NoticeModule } from './notice/notice.module';
+import { WaterLinkModule } from './water-link/water-link.module';
+import { HandleLogModule } from './handle-log/handle-log.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { NoticeModule } from './notice/notice.module';
     WaterPriceModule,
     ExportModule,
     NoticeModule,
+    WaterLinkModule,
+    HandleLogModule,
     // ConfigModule.forFeature(jwtConfig),
     // JwtModule.registerAsync(jwtConfig.asProvider()),
   ],

@@ -15,34 +15,6 @@ export class UserService {
     @InjectRepository(User) private readonly user: Repository<User>,
   ) { }
 
-  async create(createUserDto: CreateUserDto) {
-    const user = new User();
-    user.realName = createUserDto.realName;
-    user.accountName = createUserDto.accountName;
-    user.email = createUserDto.email;
-    user.phone = createUserDto.phone;
-    user.sex = createUserDto.sex;
-    user.birthday = createUserDto.birthday;
-    user.roles = createUserDto.roles;
-    const res = await this.user.save(user);
-    return res;
-  }
-
-  async login(loginDto: LoginDto) {
-    const data = await this.user.findOne({
-      where: [
-        { email: loginDto.emailOrPhone },
-        { phone: loginDto.emailOrPhone },
-      ],
-    });
-    // 判断密码
-    if (data?.password === loginDto.password) {
-      return { ...data, password: '' };
-    } else {
-      return null;
-    }
-  }
-
   async updatePassword(
     userId: string,
     oldPassword: string,
@@ -113,7 +85,6 @@ export class UserService {
         'roles'
       ],
     });
-    // console.log(res, userId);
     if (!res) throw new NotFoundException('User list is null');
     return res;
   }
@@ -174,5 +145,14 @@ export class UserService {
       searcherCount,
       adminList
     }
+  }
+
+  async getAdmin() {
+    const data = await this.user.find({
+      where:{
+        roles: Like(`%${UserRole.ADMIN}%`)
+      }
+    })
+    return data;
   }
 }

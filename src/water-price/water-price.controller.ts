@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseInterceptors, UploadedFile, Req } from '@nestjs/common';
 import { WaterPriceService } from './water-price.service';
 import { CreateWaterPriceDto } from './dto/create-water-price.dto';
 import { UpdateWaterPriceDto } from './dto/update-water-price.dto';
@@ -6,44 +6,78 @@ import Result from 'src/Result/Result';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
 import { Public } from 'src/common/decorators/public.decorator';
-
+import { FileInterceptor } from '@nestjs/platform-express';
+import * as xlsx from 'xlsx';
+import { UserService } from 'src/user/user.service';
+import { HandleLogService } from 'src/handle-log/handle-log.service';
+import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
 @Controller('water-price')
 export class WaterPriceController {
-  constructor(private readonly waterPriceService: WaterPriceService) {}
+  constructor(
+    private readonly waterPriceService: WaterPriceService,
+    private readonly userService: UserService,
+    private readonly handleLogService: HandleLogService,
+  ) {}
 
-  @Public()
   @Post()
-  async create(@Body() createWaterPriceDto: CreateWaterPriceDto) {
-    const data = await this.waterPriceService.create(createWaterPriceDto)
-    return new Result(Code.CREATE_OK, Message.Change_Success, data);
+  async create(@Body() createWaterPriceDto: CreateWaterPriceDto,@Req() req) {
+    try {
+      const data = await this.waterPriceService.create(createWaterPriceDto)
+      const user = await this.userService.findOne(req.userId);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        '新增水资源相关链接',
+        `${user.realName}(${user.userId})新增id为${data.id}的水资相关链接`
+      )
+      await this.handleLogService.create(handleLog);
+      return new Result(Code.CREATE_OK, Message.Change_Success, data); 
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
-  @Public()
   @Get()
   async findAll() {
-    const data = await this.waterPriceService.findAll()
-    return new Result(Code.GET_OK, Message.Find_Success, data);
+    try {
+      const data = await this.waterPriceService.findAll()
+      return new Result(Code.GET_OK, Message.Find_Success, data); 
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
-  @Public()
   @Get('/getWaterPrice_dashboard')
   async getWaterPriceToBashboard(){
-    const data = await this.waterPriceService.getWaterPriceToBashboard()
-    return new Result(Code.GET_OK, Message.Find_Success, data);
+    try {
+      const data = await this.waterPriceService.getWaterPriceToBashboard()
+      return new Result(Code.GET_OK, Message.Find_Success, data); 
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.waterPriceService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateWaterPriceDto: UpdateWaterPriceDto) {
-    return this.waterPriceService.update(+id, updateWaterPriceDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.waterPriceService.remove(+id);
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadExcel(@UploadedFile() file, @Req() req) {
+    try {
+      const workbook = xlsx.read(file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const sheet = workbook.Sheets[sheetName];
+      const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+      console.log(data);
+      this.waterPriceService.uploadFile(data);
+      const user = await this.userService.findOne(req.userId);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        '导入水价表',
+        `${user.realName}(${user.userId})导入水价表`
+      )
+      await this.handleLogService.create(handleLog);
+      return { message: 'Excel file uploaded and data imported successfully' }; 
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 }

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  Req,
 } from '@nestjs/common';
 import { SupplyPlanService } from './supply-plan.service';
 import { CreateSupplyPlanDto } from './dto/create-supply-plan.dto';
@@ -15,86 +16,138 @@ import { ApiOperation } from '@nestjs/swagger';
 import Result from 'src/Result/Result';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
-import { Public } from 'src/common/decorators/public.decorator';
+import { UserService } from 'src/user/user.service';
+import { HandleLogService } from 'src/handle-log/handle-log.service';
+import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
 
 @Controller('supply-plan')
 export class SupplyPlanController {
-  constructor(private readonly supplyPlanService: SupplyPlanService) {}
+  constructor(
+    private readonly supplyPlanService: SupplyPlanService,
+    private readonly userService: UserService,
+    private readonly handleLogService: HandleLogService,
+  ) { }
 
-  @ApiOperation({ summary: '新增计划', description: '' })
-  @Public()
+  @ApiOperation({ summary: '新增供水计划', description: '' })
   @Post()
-  async create(@Body() createSupplyPlanDto: CreateSupplyPlanDto) {
-    const data = await this.supplyPlanService.create(createSupplyPlanDto);
-    return new Result(Code.CREATE_OK, Message.Change_Success, data);
+  async create(@Body() createSupplyPlanDto: CreateSupplyPlanDto,@Req() req) {
+    try {
+      const data = await this.supplyPlanService.create(createSupplyPlanDto);
+      const user = await this.userService.findOne(req.userId);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        '新增供水计划',
+        `${user.realName}(${user.userId})新增id为${data.id}的供水计划`
+      )
+      await this.handleLogService.create(handleLog);
+      return new Result(Code.CREATE_OK, Message.Change_Success, data);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
-  @ApiOperation({ summary: '上传水价表', description: '' })
-  @Public()
-  @Post('water_price')
-  createWaterPrice(@Body() createSupplyPlanDto: CreateSupplyPlanDto) {
-    return 'x';
-  }
-
-  @ApiOperation({ summary: '获取所有计划', description: '' })
-  @Public()
+  @ApiOperation({ summary: '获取所有供水计划', description: '' })
   @Get()
   async findAll() {
-    const data = await this.supplyPlanService.findAll();
-    return new Result(Code.GET_OK, Message.Find_Success, data);
+    try {
+      const data = await this.supplyPlanService.findAll();
+      return new Result(Code.GET_OK, Message.Find_Success, data);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
-  @Public()
   @Get('/getPlan_dashboard')
-  async getWaterToBashboard(){
-    const data = await this.supplyPlanService.getWaterToBashboard()
-    return new Result(Code.GET_OK, Message.Find_Success, data);
+  async getWaterToBashboard() {
+    try {
+      const data = await this.supplyPlanService.getWaterToBashboard()
+      return new Result(Code.GET_OK, Message.Find_Success, data);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
-  @Public()
+
   @Get('/findByCondition')
   async findByCondition(
     @Query('waterArea') waterArea?: string,
     @Query('waterPriceType') waterPriceType?: string) {
-    console.log(waterArea, waterPriceType);
-    const data = await this.supplyPlanService.findByCondition(waterArea, waterPriceType);
-    return new Result(Code.GET_OK, Message.Find_Success, data);
+    try {
+      const data = await this.supplyPlanService.findByCondition(waterArea, waterPriceType);
+      return new Result(Code.GET_OK, Message.Find_Success, data);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
   @ApiOperation({ summary: 'id查询计划', description: '' })
-  @Public()
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.supplyPlanService.findOne(+id);
   }
 
   @ApiOperation({ summary: '修改计划', description: '' })
-  @Public()
   @Patch(':id')
   async update(
     @Param('id') id: string,
     @Body() updateSupplyPlanDto: UpdateSupplyPlanDto,
+    @Req() req
   ) {
-    console.log(updateSupplyPlanDto);
-    const data = await this.supplyPlanService.update(+id, updateSupplyPlanDto);
-    return new Result(data.code, data.msg, null);
+    try {
+      const data = await this.supplyPlanService.update(+id, updateSupplyPlanDto);
+      const user = await this.userService.findOne(req.userId);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        '修改供水计划',
+        `${user.realName}(${user.userId})修改id为${id}的供水计划`
+      )
+      await this.handleLogService.create(handleLog);
+      return new Result(data.code, data.msg, null);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
   @ApiOperation({ summary: '删除计划', description: '' })
-  @Public()
   @Delete(':id')
-  async remove(@Param('id') id: string) {
-    const data = await this.supplyPlanService.remove(+id);
-    return new Result(data.code, data.msg, null);
+  async remove(@Param('id') id: string, @Req() req) {
+    try {
+      const data = await this.supplyPlanService.remove(+id);
+      const user = await this.userService.findOne(req.userId);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        '彻底删除',
+        `${user.realName}(${user.userId})彻底删除id为${id}的供水计划`
+      )
+      await this.handleLogService.create(handleLog);
+      return new Result(data.code, data.msg, null);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 
   @ApiOperation({ summary: '删除计划根据原因', description: '' })
-  @Public()
   @Delete('/delete_description/:id/:delReason')
   async deleteByDelReason(
     @Param('id') id: string,
     @Param('delReason') delReason: string,
+    @Req() req
   ) {
-    const data = await this.supplyPlanService.deleteByDelReason(+id, delReason);
-    return new Result(data.code, data.msg, null);
+    try {
+      const data = await this.supplyPlanService.deleteByDelReason(+id, delReason);
+      const user = await this.userService.findOne(req.userId);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        '标记删除',
+        `${user.realName}(${user.userId})标记删除id为${id}的供水计划`
+      )
+      await this.handleLogService.create(handleLog);
+      return new Result(data.code, data.msg, null);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
   }
 }

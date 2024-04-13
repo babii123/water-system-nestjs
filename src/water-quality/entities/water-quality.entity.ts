@@ -12,7 +12,7 @@ export class WaterQuality {
   addUser: string;
   @Column({ type: 'date', name: 'detect_time' })
   detectTime: Date;
-  @Column({ type: 'simple-json', name: 'detect' })
+  @Column({ type: 'simple-json', name: 'detect_people' })
   detectPeople: string[];
   @Column({ type: 'float', name: 'ph', comment: 'ph值' })
   ph: number;
@@ -20,6 +20,8 @@ export class WaterQuality {
   turbidity: number;
   @Column({ type: 'float', name: 'fluoride', comment: '含氟量' })
   fluoride: number;
+  @Column({ type: 'float', name: 'cyanin', comment: '含氰量' })
+  cyanin: number;
   @Column({ type: 'boolean', name: 'is_del', default: false })
   isDel: boolean;
   @Column({ type: 'varchar', name: 'del_reason', default: '' })

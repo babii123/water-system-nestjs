@@ -41,5 +41,5 @@ export class User {
   @Column('date')
   birthday: Date;
   @Column({ type: 'set', enum: UserRole, default: [] })
-  roles: UserRole[];
+  roles: string[];
 }

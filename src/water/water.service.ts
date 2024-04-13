@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { deleteResult, updateResult } from 'src/Result/JudgeResult';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
+import { UserRole } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class WaterService {
@@ -41,7 +42,7 @@ export class WaterService {
         isDel: false
       }
     })
-    return data
+    return data;
   }
 
   async update(id: number, updateWaterDto: UpdateWaterDto) {
@@ -54,16 +55,24 @@ export class WaterService {
     return deleteResult(res);
   }
 
-  async removeMulti(idList: number[]) {
-    const waters = await this.waterRepository.find({
-      where: { id: In(idList) },
-    });
-    const res = await this.waterRepository.remove(waters);
-    return {
-      code: res ? Code.DELETE_OK : Code.DELETE_ERR,
-      msg: res ? Message.Del_Success : Message.Del_Fail,
-      data: res,
-    };
+  async removeMulti(idList: number[], delReason: string, roles: string[]) {
+    // 如果是管理员彻底删除
+    if (roles.includes(UserRole.ADMIN)) {
+      const waters = await this.waterRepository.find({
+        where: { id: In(idList) },
+      });
+      const res = await this.waterRepository.remove(waters);
+      return {
+        code: res ? Code.DELETE_OK : Code.DELETE_ERR,
+        msg: res ? Message.Del_Success : Message.Del_Fail,
+        data: res,
+      };
+    } else {
+      // 如果不是则标记删除
+      idList.forEach(async (id) => {
+        await this.deleteByDelReason(id, delReason);
+      })
+    }
   }
 
   async deleteByDelReason(id: number, delReason: string) {
@@ -76,6 +85,6 @@ export class WaterService {
 
   async getWaterCountToBashboard() {
     const waterCount = await this.waterRepository.count()
-    return waterCount
+    return waterCount;
   }
 }

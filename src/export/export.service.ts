@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import * as ExcelJS from 'exceljs';
+import { Alignment } from 'exceljs';
 import { Response } from 'express';
 
 const headerName = {
@@ -33,6 +34,12 @@ const headerName = {
   turbidity: '浊度',
   ph: '酸碱度',
   fluoride: '含氟量',
+  cyanin: '含氰量',
+  basicPrice: '基本水价',
+  resourceCost:'水资源费',
+  pollutionCost: '污水处理费',
+  realPrice: '用户最终负担价格',
+  handle: '操作类型',
 }
 
 @Injectable()
@@ -52,9 +59,9 @@ export class ExportService {
     worksheet.addRow(headerNames);
     worksheet.eachRow(row => {
       row.font = headerStyle.font;
-      row.alignment = headerStyle.alignment;
+      row.alignment = headerStyle.alignment as Partial<Alignment>;
     });
-   
+
     // 添加数据
     data.forEach((record) => {
       const row = [];
@@ -62,6 +69,9 @@ export class ExportService {
         row.push(record[header]);
       });
       worksheet.addRow(row);
+      worksheet.eachRow(row => {
+        row.alignment = headerStyle.alignment as Partial<Alignment>;
+      });
     });
 
     // 设置 HTTP 响应头
@@ -74,7 +84,6 @@ export class ExportService {
       `attachment; filename=${fileName}.xlsx`,
     );
 
-    // 将 Excel 数据写入响应流
     await workbook.xlsx.write(res);
 
     // 结束响应
