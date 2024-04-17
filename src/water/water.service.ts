@@ -21,13 +21,18 @@ export class WaterService {
     return res;
   }
 
-  async findAll() {
-    const data = await this.waterRepository.find({
-      where: {
-        isDel: false,
-      },
-    });
-    return data;
+  async findAll(roles: string[]) {
+    if (roles.includes(UserRole.ADMIN)) {
+      const data = await this.waterRepository.find();
+      return data;
+    } else {
+      const data = await this.waterRepository.find({
+        where: {
+          isDel: false,
+        },
+      });
+      return data;
+    }
   }
 
   findOne(id: number) {
@@ -50,9 +55,11 @@ export class WaterService {
     return updateResult(res);
   }
 
-  async remove(id: number) {
-    const res = await this.waterRepository.delete({ id });
-    return deleteResult(res);
+  remove(idList: number[]) {
+    idList.forEach(async (id) => {
+      await this.waterRepository.delete({ id })
+    })
+    return '';
   }
 
   async removeMulti(idList: number[], delReason: string, roles: string[]) {
@@ -86,5 +93,20 @@ export class WaterService {
   async getWaterCountToBashboard() {
     const waterCount = await this.waterRepository.count()
     return waterCount;
+  }
+
+  async getWaterTypeArrToBashboard(allData: any) {
+    let typeArr = await Promise.all(allData.map(async (item) => {
+      const count = await this.waterRepository.count({ where: { type: item.type } })
+      if (count > 0) {
+        return new Promise((resolve) => {
+          resolve({
+            name: item.type,
+            value: count
+          })
+        })
+      }
+    }))
+    return typeArr;
   }
 }

@@ -15,7 +15,6 @@ import { ApiOperation } from '@nestjs/swagger';
 import Result from 'src/Result/Result';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
-import { SocketGateway } from 'src/notice/gateway/socket.gateway';
 import { HandleLogService } from 'src/handle-log/handle-log.service';
 import { UserService } from 'src/user/user.service';
 import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
@@ -24,7 +23,6 @@ import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
 export class AuthController {
   constructor(
     private readonly authService: AuthService,
-    private readonly socketGateWay: SocketGateway,
     private readonly handleLogService: HandleLogService,
     private readonly userService: UserService,
   ) { }

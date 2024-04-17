@@ -3,8 +3,8 @@
 import { SubscribeMessage, WebSocketGateway, WebSocketServer, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
-@WebSocketGateway()
-export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
+@WebSocketGateway({ cors: true })
+export class WebsocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
 
   private clients = new Map<string, Socket>();

@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import { CreateSupplyPlanDto } from './dto/create-supply-plan.dto';
 import { UpdateSupplyPlanDto } from './dto/update-supply-plan.dto';
-import { Like, Repository } from 'typeorm';
+import { In, Like, Repository } from 'typeorm';
 import { SupplyPlan } from './entities/supply-plan.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { deleteResult, updateResult } from 'src/Result/JudgeResult';
+import { UserRole } from 'src/user/entities/user.entity';
+import { Code } from 'src/Result/Code';
+import { Message } from 'src/Result/Message';
 
 @Injectable()
 export class SupplyPlanService {
@@ -18,13 +21,18 @@ export class SupplyPlanService {
     return res;
   }
 
-  async findAll() {
-    const supplyPlans = await this.supplyPlanrRepository.find({
-      where: {
-        isDel: false,
-      },
-    });
-    return supplyPlans;
+  async findAll(roles: string[]) {
+    if (roles.includes(UserRole.ADMIN)) {
+      const supplyPlans = await this.supplyPlanrRepository.find();
+      return supplyPlans;
+    } else{
+      const supplyPlans = await this.supplyPlanrRepository.find({
+        where: {
+          isDel: false,
+        },
+      });
+      return supplyPlans;
+    }
   }
 
   findOne(id: number) {
@@ -50,9 +58,11 @@ export class SupplyPlanService {
     return updateResult(res);
   }
 
-  async remove(id: number) {
-    const res = await this.supplyPlanrRepository.delete({ id });
-    return deleteResult(res);
+  remove(idList: number[]) {
+    idList.forEach(async (id) => {
+      await this.supplyPlanrRepository.delete({ id })
+    })
+    return '';
   }
 
   async deleteByDelReason(id: number, delReason: string) {
@@ -63,8 +73,26 @@ export class SupplyPlanService {
     return updateResult(res);
   }
 
-  async getWaterToBashboard(){
+  async getWaterToBashboard() {
     const planCount = await this.supplyPlanrRepository.count()
     return planCount;
+  }
+
+  async removeMulti(idList: number[], delReason: string, roles: string[]) {
+    if (roles.includes(UserRole.ADMIN)) {
+      const plans = await this.supplyPlanrRepository.find({
+        where: { id: In(idList) },
+      });
+      const res = await this.supplyPlanrRepository.remove(plans);
+      return {
+        code: res ? Code.DELETE_OK : Code.DELETE_ERR,
+        msg: res ? Message.Del_Success : Message.Del_Fail,
+        data: res,
+      };
+    } else {
+      idList.forEach(async (id) => {
+        await this.deleteByDelReason(id, delReason)
+      })
+    }
   }
 }

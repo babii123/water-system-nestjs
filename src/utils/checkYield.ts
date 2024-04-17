@@ -15,4 +15,9 @@ function checkYield(storage) {
   return { info, result };
 }
 
+export function countInRange(array, start, end) {
+  const filteredArray = array.filter(item => item >= start && item < end);
+  return filteredArray.length;
+}
+
 export default checkYield;

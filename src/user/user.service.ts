@@ -15,29 +15,6 @@ export class UserService {
     @InjectRepository(User) private readonly user: Repository<User>,
   ) { }
 
-  async updatePassword(
-    userId: string,
-    oldPassword: string,
-    newPassword: string,
-  ): Promise<{ code: number; msg: string }> {
-    // 查不到则 res 为 null
-    const res = await this.user.findOne({
-      where: {
-        userId,
-        password: oldPassword,
-      },
-    });
-
-    if (res) {
-      const res1 = await this.user.update(
-        { userId: userId },
-        { password: newPassword },
-      );
-      return updateResult(res1);
-    }
-    return { code: Code.UPDATE_ERR, msg: '原密码错误!!!' };
-  }
-
   async verifyRoles(userId: string) {
     const res = await this.user.findOne({
       where: {
@@ -100,10 +77,7 @@ export class UserService {
     return data
   }
 
-  async update(
-    userId: string,
-    updateUserDto: UpdateUserDto,
-  ): Promise<{ code: number; msg: string }> {
+  async update(userId: string, updateUserDto: UpdateUserDto,) {
     const res = await this.user.update({ userId }, updateUserDto);
     return updateResult(res);
   }
@@ -113,9 +87,7 @@ export class UserService {
     return deleteResult(res);
   }
 
-  async removeMulti(
-    idList: number[],
-  ): Promise<{ code: number; msg: string; data: any }> {
+  async removeMulti(idList: number[]) {
     const users = await this.user.find({ where: { id: In(idList) } });
     const res = await this.user.remove(users);
     return {
@@ -149,7 +121,7 @@ export class UserService {
 
   async getAdmin() {
     const data = await this.user.find({
-      where:{
+      where: {
         roles: Like(`%${UserRole.ADMIN}%`)
       }
     })

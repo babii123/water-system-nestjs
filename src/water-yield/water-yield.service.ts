@@ -8,6 +8,7 @@ import { deleteResult, updateResult } from 'src/Result/JudgeResult';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
 import { UserRole } from 'src/user/entities/user.entity';
+import { countInRange } from 'src/utils/checkYield';
 
 @Injectable()
 export class WaterYieldService {
@@ -21,13 +22,18 @@ export class WaterYieldService {
     return res;
   }
 
-  async findAll() {
-    const data = await this.waterYieldRepository.find({
-      where: {
-        isDel: false,
-      },
-    });
-    return data;
+  async findAll(roles: string[]) {
+    if (roles.includes(UserRole.ADMIN)) {
+      const data = await this.waterYieldRepository.find();
+      return data;
+    } else {
+      const data = await this.waterYieldRepository.find({
+        where: {
+          isDel: false,
+        },
+      });
+      return data;
+    }
   }
 
   async findOne(id: number) {
@@ -49,9 +55,11 @@ export class WaterYieldService {
     return updateResult(res);
   }
 
-  async remove(id: number) {
-    const res = await this.waterYieldRepository.delete(id);
-    return deleteResult(res);
+  remove(idList: number[]) {
+    idList.forEach(async (id) => {
+      await this.waterYieldRepository.delete(id)
+    })
+    return '';
   }
 
   async removeMulti(idList: number[], delReason: string, roles: string[]) {
@@ -80,5 +88,50 @@ export class WaterYieldService {
     waterQuality.isDel = true;
     const res = await this.waterYieldRepository.update({ id }, waterQuality);
     return updateResult(res);
+  }
+
+  async getWaterYieldToBashboard() {
+    const allData = await this.findAll([UserRole.ADMIN]),
+      supply = allData.map(item => item.supply),
+      storage = allData.map(item => item.storage);
+    const standard = [
+      {
+        start: 1,
+        end: 100
+      },
+      {
+        start: 100,
+        end: 120
+      },
+      {
+        start: 120,
+        end: 140
+      },
+      {
+        start: 140,
+        end: 160
+      },
+      {
+        start: 160,
+        end: 180
+      },
+      {
+        start: 180,
+        end: 200
+      },
+    ]
+    let supplyLine = [], storageLine = [], supplyCount = 0, storageCount = 0;
+    standard.forEach((item) => {
+      supplyCount += countInRange(supply, item.start, item.end)
+      supplyLine.push(supplyCount);
+      storageCount += countInRange(storage, item.start, item.end)
+      storageLine.push(storageCount);
+    })
+    supplyLine.push(supply.length - supplyCount);
+    storageLine.push(storage.length - storageCount);
+    return {
+      storageLine,
+      supplyLine
+    }
   }
 }

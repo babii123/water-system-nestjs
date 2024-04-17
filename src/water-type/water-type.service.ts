@@ -57,4 +57,13 @@ export class WaterTypeService {
       data: res,
     };
   }
+
+  async getWaterTypeToBashboard() {
+    const allCount = await this.waterTypeRepository.count();
+    const allData = await this.findAll();
+    return {
+      allCount,
+      allData
+    }
+  }
 }

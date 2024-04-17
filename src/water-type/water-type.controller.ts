@@ -17,12 +17,13 @@ import { Code } from 'src/Result/Code';
 import { UserService } from 'src/user/user.service';
 import { HandleLogService } from 'src/handle-log/handle-log.service';
 import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
-import { UserRole } from 'src/user/entities/user.entity';
+import { WaterService } from 'src/water/water.service';
 
 @Controller('water-type')
 export class WaterTypeController {
   constructor(
     private readonly waterTypeService: WaterTypeService,
+    private readonly waterService: WaterService,
     private readonly userService: UserService,
     private readonly handleLogService: HandleLogService,
   ) { }
@@ -50,6 +51,17 @@ export class WaterTypeController {
     try {
       const data = await this.waterTypeService.findAll();
       return new Result(Code.GET_OK, Message.Find_Success, data);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
+  }
+
+  @Get('getWaterType_dashboard')
+  async getWaterTypeToBashboard() {
+    try {
+      const { allCount, allData } = await this.waterTypeService.getWaterTypeToBashboard();
+      const typeArr = await this.waterService.getWaterTypeArrToBashboard(allData);
+      return new Result(Code.GET_OK, Message.Find_Success, { allCount, typeArr });
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }

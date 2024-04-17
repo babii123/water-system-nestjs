@@ -51,9 +51,10 @@ export class WaterController {
 
   @ApiOperation({ summary: '查找所有水资源', description: '' })
   @Get()
-  async findAll() {
+  async findAll(@Req() req) {
     try {
-      const data = await this.waterService.findAll();
+      const user = await this.userService.findOne(req.userId);
+      const data = await this.waterService.findAll(user.roles);
       return new Result(Code.GET_OK, Message.Find_Success, data);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
@@ -107,19 +108,22 @@ export class WaterController {
   }
 
   @ApiOperation({ summary: '彻底删除水资源', description: '' })
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req) {
+  @Delete(':idList')
+  async remove(@Param('idList') idStr: string, @Req() req) {
     try {
-      const data = await this.waterService.remove(+id);
+      const idList = idStr.split(',').map((item) => {
+        return parseInt(item);
+      });
+      this.waterService.remove(idList);
       const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
         user.userId,
         user.realName,
         '彻底删除水资源',
-        `${user.realName}(${user.userId})彻底删除id为${id}的水资源`
+        `${user.realName}(${user.userId})彻底删除id为${idStr}的水资源`
       )
       await this.handleLogService.create(handleLog);
-      return new Result(data.code, data.msg, null);
+      return new Result(Code.DELETE_OK, Message.Del_Success, null);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }

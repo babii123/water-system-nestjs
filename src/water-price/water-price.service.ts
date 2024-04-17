@@ -29,8 +29,8 @@ export class WaterPriceService {
     return data
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} waterPrice`;
+  async findOne(type: string) {
+    return await this.waterPriceRepository.findOne({ where: { type } })
   }
 
   update(id: number, updateWaterPriceDto: UpdateWaterPriceDto) {
@@ -41,18 +41,23 @@ export class WaterPriceService {
     return `This action removes a #${id} waterPrice`;
   }
 
-  async uploadFile(data) {
-    
+  async uploadFile(data: { [key: string]: CreateWaterPriceDto | any }) {
+    for (const type of Object.keys(data)) {
+      // 根据type修改
+      const oldPrice = await this.findOne(type);
+      await this.waterPriceRepository.update({ type }, { id: oldPrice.id, ...data[type] });
+    }
+    return ''
   }
 
-  async getWaterPriceToBashboard(){
+  async getWaterPriceToBashboard() {
     const waterPrice = await this.waterPriceRepository.find()
     const realPrices = {}
     const basicPrices = {}
     const pollutionCosts = {}
     const resourceCosts = {}
-    waterPrice.forEach(item=>{
-      realPrices[item.type] = item.realPrice 
+    waterPrice.forEach(item => {
+      realPrices[item.type] = item.realPrice
       basicPrices[item.type] = item.basicPrice
       pollutionCosts[item.type] = item.pollutionCost
       resourceCosts[item.type] = item.resourceCost

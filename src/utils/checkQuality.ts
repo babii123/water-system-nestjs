@@ -1,4 +1,4 @@
-function checkPH(ph) {
+export function checkPH(ph) {
   let info = '';
   let result = false;
   if (ph < 6.5) {
@@ -12,7 +12,7 @@ function checkPH(ph) {
   return { info, result };
 }
 
-function checkTurbidity(turbidity) {
+export function checkTurbidity(turbidity) {
   let info = '';
   let result = false;
   if (turbidity > 1) {
@@ -24,7 +24,7 @@ function checkTurbidity(turbidity) {
   return { info, result };
 }
 
-function checkFluoride(fluoride) {
+export function checkFluoride(fluoride) {
   let info = '';
   let result = false;
   if (fluoride > 1) {
@@ -36,7 +36,7 @@ function checkFluoride(fluoride) {
   return { info, result };
 }
 
-function checkCyanin(cyanin) {
+export function checkCyanin(cyanin) {
   let info = '';
   let result = false;
   if (cyanin > 1) {

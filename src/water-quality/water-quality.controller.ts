@@ -15,7 +15,6 @@ import { Public } from 'src/common/decorators/public.decorator';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
 import Result from 'src/Result/Result';
-import { SocketGateway } from 'src/notice/gateway/socket.gateway';
 import { NoticeService } from 'src/notice/notice.service';
 import checkQuality from 'src/utils/checkQuality';
 import { UserService } from 'src/user/user.service';
@@ -23,15 +22,16 @@ import { CreateNoticeDto } from 'src/notice/dto/create-notice.dto';
 import { HandleLogService } from 'src/handle-log/handle-log.service';
 import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
 import { UserRole } from 'src/user/entities/user.entity';
+import { WebsocketGateway } from 'src/websocket/websocket.gateway'
 
 @Controller('water-quality')
 export class WaterQualityController {
   constructor(
     private readonly waterQualityService: WaterQualityService,
-    private readonly socketGateway: SocketGateway,
     private readonly noticeService: NoticeService,
     private readonly userService: UserService,
-    private readonly handleLogService: HandleLogService
+    private readonly handleLogService: HandleLogService,
+    private readonly WebsocketGateway: WebsocketGateway,
   ) { }
 
   @Post()
@@ -56,7 +56,7 @@ export class WaterQualityController {
           const noticeInfo = await this.noticeService.create(notice);
           console.log(noticeInfo);
           // 实时通知前端
-          this.socketGateway.sendNotificationToUser(admin.userId, noticeInfo);
+          this.WebsocketGateway.sendNotificationToUser(admin.userId, noticeInfo);
         }
       }
       const user = await this.userService.findOne(req.userId);
@@ -74,9 +74,21 @@ export class WaterQualityController {
   }
 
   @Get()
-  async findAll() {
+  async findAll(@Req() req) {
     try {
-      const data = await this.waterQualityService.findAll();
+      const user = await this.userService.findOne(req.userId);
+      const data = await this.waterQualityService.findAll(user.roles);
+      return new Result(Code.GET_OK, Message.Find_Success, data);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
+  }
+
+  @Get('getWaterQuality_dashboard')
+  async getWaterQualityToBashboard() {
+    try {
+      const data = await this.waterQualityService.getWaterQualityToBashboard();
+      console.log(data);
       return new Result(Code.GET_OK, Message.Find_Success, data);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
@@ -105,7 +117,7 @@ export class WaterQualityController {
         // 查询所有超级管理员
         this.noticeService.sendEmail('system', '', '水质报警', info)
         // 实时通知前端
-        this.socketGateway.sendNotificationToUser('', '');
+        this.WebsocketGateway.sendNotificationToUser('', '');
       }
       const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
@@ -121,19 +133,22 @@ export class WaterQualityController {
     }
   }
 
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req) {
+  @Delete(':idStr')
+  async remove(@Param('idStr') idStr: string, @Req() req) {
     try {
-      const data = await this.waterQualityService.remove(+id);
+      const idList = idStr.split(',').map((item) => {
+        return parseInt(item);
+      });
+      this.waterQualityService.remove(idList);
       const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
         user.userId,
         user.realName,
         '彻底删除水质信息',
-        `${user.realName}(${user.userId})彻底删除id为${id}的水质信息`
+        `${user.realName}(${user.userId})彻底删除id为${idStr}的水质信息`
       )
       await this.handleLogService.create(handleLog);
-      return new Result(data.code, data.msg, null);
+      return new Result(Code.DELETE_OK, Message.Del_Success, null);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }

@@ -1,9 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Req } from '@nestjs/common';
 import { NoticeService } from './notice.service';
 import { CreateNoticeDto } from './dto/create-notice.dto';
-import { UpdateNoticeDto } from './dto/update-notice.dto';
-import { Public } from 'src/common/decorators/public.decorator';
-import { SocketGateway } from './gateway/socket.gateway';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
 import Result from 'src/Result/Result';
@@ -20,14 +17,12 @@ export class NoticeController {
     private readonly handleLogService: HandleLogService,
   ) { }
 
-  @Public()
   @Post()
   async create(@Body() createNoticeDto: CreateNoticeDto) {
     const data = await this.noticeService.create(createNoticeDto);
     return new Result(Code.CREATE_OK, Message.Change_Success, data);
   }
 
-  @Public()
   @Post('send')
   async sendEmailBySendId(@Body() sendEmailDto: SendEmailDto) {
     try {
@@ -53,7 +48,6 @@ export class NoticeController {
   }
 
   // 根据收件者Id获取信息
-  @Public()
   @Get(':receiveId')
   async findByReceiveId(@Param('receiveId') receiveId: string) {
     try {

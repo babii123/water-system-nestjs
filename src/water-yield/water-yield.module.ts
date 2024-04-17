@@ -4,14 +4,12 @@ import { WaterYieldController } from './water-yield.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { WaterYield } from './entities/water-yield.entity';
 import { NoticeModule } from 'src/notice/notice.module';
-import { SocketGateway } from 'src/notice/gateway/socket.gateway';
-import { UserModule } from 'src/user/user.module';
-import { HandleLogModule } from 'src/handle-log/handle-log.module';
+import { WebsocketGateway } from 'src/websocket/websocket.gateway'
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WaterYield]), NoticeModule, SocketGateway, UserModule, HandleLogModule],
+  imports: [TypeOrmModule.forFeature([WaterYield]), NoticeModule],
   controllers: [WaterYieldController],
-  providers: [WaterYieldService],
+  providers: [WaterYieldService, WebsocketGateway],
   exports: [WaterYieldService]
 })
 export class WaterYieldModule { }

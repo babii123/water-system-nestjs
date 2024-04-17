@@ -19,6 +19,7 @@ import { Message } from 'src/Result/Message';
 import { UserService } from 'src/user/user.service';
 import { HandleLogService } from 'src/handle-log/handle-log.service';
 import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
+import { UserRole } from 'src/user/entities/user.entity';
 
 @Controller('supply-plan')
 export class SupplyPlanController {
@@ -30,7 +31,7 @@ export class SupplyPlanController {
 
   @ApiOperation({ summary: '新增供水计划', description: '' })
   @Post()
-  async create(@Body() createSupplyPlanDto: CreateSupplyPlanDto,@Req() req) {
+  async create(@Body() createSupplyPlanDto: CreateSupplyPlanDto, @Req() req) {
     try {
       const data = await this.supplyPlanService.create(createSupplyPlanDto);
       const user = await this.userService.findOne(req.userId);
@@ -49,9 +50,10 @@ export class SupplyPlanController {
 
   @ApiOperation({ summary: '获取所有供水计划', description: '' })
   @Get()
-  async findAll() {
+  async findAll(@Req() req) {
     try {
-      const data = await this.supplyPlanService.findAll();
+      const user = await this.userService.findOne(req.userId);
+      const data = await this.supplyPlanService.findAll(user.roles);
       return new Result(Code.GET_OK, Message.Find_Success, data);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
@@ -110,19 +112,22 @@ export class SupplyPlanController {
   }
 
   @ApiOperation({ summary: '删除计划', description: '' })
-  @Delete(':id')
-  async remove(@Param('id') id: string, @Req() req) {
+  @Delete(':idList')
+  async remove(@Param('idList') idStr: string, @Req() req) {
     try {
-      const data = await this.supplyPlanService.remove(+id);
+      const idList = idStr.split(',').map((item) => {
+        return parseInt(item);
+      });
+      this.supplyPlanService.remove(idList);
       const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
         user.userId,
         user.realName,
         '彻底删除',
-        `${user.realName}(${user.userId})彻底删除id为${id}的供水计划`
+        `${user.realName}(${user.userId})彻底删除id为${idStr}的供水计划`
       )
       await this.handleLogService.create(handleLog);
-      return new Result(data.code, data.msg, null);
+      return new Result(Code.DELETE_OK, Message.Del_Success, null);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }
@@ -146,6 +151,29 @@ export class SupplyPlanController {
       )
       await this.handleLogService.create(handleLog);
       return new Result(data.code, data.msg, null);
+    } catch (error) {
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
+    }
+  }
+
+  @ApiOperation({ summary: '批量删除供水计划', description: '' })
+  @Delete('/delete_multi/:idStr/:delReason')
+  async removeMulti(@Param('idStr') idStr: string, @Param('delReason') delReason: string, @Req() req) {
+    try {
+      const user = await this.userService.findOne(req.userId);
+      const idList = idStr.split(',').map((item) => {
+        return parseInt(item);
+      });
+      const handle = user.roles.includes(UserRole.ADMIN) ? '彻底删除' : '标记删除';
+      const data = await this.supplyPlanService.removeMulti(idList, delReason, user.roles);
+      const handleLog = new CreateHandleLogDto(
+        user.userId,
+        user.realName,
+        `${handle}供水计划`,
+        `${user.realName}(${user.userId})${handle}id为${idStr}的供水计划`
+      )
+      await this.handleLogService.create(handleLog);
+      return new Result(data.code, data.msg, data.data);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }

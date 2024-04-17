@@ -20,6 +20,7 @@ import { ExportModule } from './export/export.module';
 import { NoticeModule } from './notice/notice.module';
 import { WaterLinkModule } from './water-link/water-link.module';
 import { HandleLogModule } from './handle-log/handle-log.module';
+import { WebsocketGateway } from './websocket/websocket.gateway';
 
 @Module({
   imports: [
@@ -64,6 +65,7 @@ import { HandleLogModule } from './handle-log/handle-log.module';
   controllers: [AppController],
   providers: [
     AppService,
+    WebsocketGateway,
     // 全局路由守卫
     // {
     //   provide: APP_GUARD,

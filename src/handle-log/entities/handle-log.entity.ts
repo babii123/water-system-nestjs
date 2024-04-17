@@ -12,6 +12,6 @@ export class HandleLog {
   handle: string
   @Column('varchar')
   description: string
-  @Column({ type: 'date', default: new Date() })
+  @Column('date')
   time: Date;
 }

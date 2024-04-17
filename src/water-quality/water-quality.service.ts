@@ -8,6 +8,7 @@ import { deleteResult, updateResult } from 'src/Result/JudgeResult';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
 import { UserRole } from 'src/user/entities/user.entity';
+import checkQuality, { checkCyanin, checkFluoride, checkPH, checkTurbidity } from 'src/utils/checkQuality';
 
 @Injectable()
 export class WaterQualityService {
@@ -23,13 +24,18 @@ export class WaterQualityService {
     return res;
   }
 
-  async findAll() {
-    const data = await this.waterQualityRepository.find({
-      where: {
-        isDel: false,
-      },
-    });
-    return data;
+  async findAll(roles: string[]) {
+    if (roles.includes(UserRole.ADMIN)) {
+      const data = await this.waterQualityRepository.find();
+      return data;
+    } else {
+      const data = await this.waterQualityRepository.find({
+        where: {
+          isDel: false,
+        },
+      });
+      return data;
+    }
   }
 
   async findOne(id: number) {
@@ -50,9 +56,11 @@ export class WaterQualityService {
     return updateResult(res);
   }
 
-  async remove(id: number) {
-    const res = await this.waterQualityRepository.delete({ id });
-    return deleteResult(res);
+  remove(idList: number[]) {
+    idList.forEach(async (id) => {
+      await this.waterQualityRepository.delete({ id });
+    })
+    return '';
   }
 
   async removeMulti(idList: number[], delReason: string, roles: string[]) {
@@ -66,7 +74,7 @@ export class WaterQualityService {
         msg: res ? Message.Del_Success : Message.Del_Fail,
         data: res,
       };
-    }else{
+    } else {
       idList.forEach(async (id) => {
         await this.deleteByDelReason(id, delReason);
       })
@@ -81,5 +89,42 @@ export class WaterQualityService {
     waterQuality.isDel = true;
     const res = await this.waterQualityRepository.update({ id }, waterQuality);
     return updateResult(res);
+  }
+
+  async getWaterQualityToBashboard() {
+    const allData = await this.findAll([UserRole.ADMIN]);
+    console.log(allData);
+    let phGood = 0, phBad = 0,
+      turbidityGood = 0, turbidityBad = 0,
+      fluorideGood = 0, fluorideBad = 0,
+      cyaninGood = 0, cyaninBad = 0;
+    allData.forEach((item) => {
+      // ph,浑浊度，含氟，含氰
+      if (checkPH(item.ph).result) {
+        phBad += 1;
+      } else {
+        phGood += 1;
+      }
+      if (checkTurbidity(item.turbidity).result) {
+        turbidityBad += 1;
+      } else {
+        turbidityGood += 1;
+      }
+      if (checkFluoride(item.fluoride).result) {
+        fluorideBad += 1;
+      } else {
+        fluorideGood += 1;
+      }
+      if (checkCyanin(item.cyanin).result) {
+        cyaninBad += 1;
+      } else {
+        cyaninGood += 1;
+      }
+    })
+
+    return [
+      [phGood, turbidityGood, fluorideGood, cyaninGood],
+      [phBad, turbidityBad, fluorideBad, cyaninBad]
+    ]
   }
 }
