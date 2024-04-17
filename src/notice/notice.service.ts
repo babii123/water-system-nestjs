@@ -55,7 +55,6 @@ export class NoticeService {
 
   async update(id: number) {
     const notice = await this.findOne(id);
-    console.log(notice);
     if (!notice.isRead) {
       notice.isRead = true;
       const res = this.noticeRepository.update({ id }, notice);
@@ -77,7 +76,6 @@ export class NoticeService {
         subject, // 邮件主题
         text, // 邮件内容
       });
-      console.log('Email sent successfully');
     } catch (error) {
       console.error('Error sending email:', error);
       throw error; // 如果发送邮件失败，抛出错误

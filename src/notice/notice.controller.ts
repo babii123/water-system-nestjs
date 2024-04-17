@@ -24,7 +24,7 @@ export class NoticeController {
   }
 
   @Post('send')
-  async sendEmailBySendId(@Body() sendEmailDto: SendEmailDto) {
+  async sendEmailBySendId(@Body() sendEmailDto: SendEmailDto, @Req() req) {
     try {
       await this.noticeService.sendEmail(
         sendEmailDto.sendId,
@@ -32,26 +32,25 @@ export class NoticeController {
         sendEmailDto.title, // 邮件主题
         sendEmailDto.info, // 邮件内容
       );
-      const user = await this.userService.findOne(sendEmailDto.sendId);
-      const receive = await this.userService.findOne(sendEmailDto.receiveId);
+      const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
         user.userId,
         user.realName,
         '发送邮件',
-        `${user.realName}(${user.userId})向${receive.realName}(${receive.userId})发送邮件`
+        `${user.realName}(${user.userId})向${sendEmailDto.receiveId}发送邮件`
       )
       await this.handleLogService.create(handleLog);
-      return 'Email sent successfully';
+      return new Result(Code.GET_OK, Message.Find_Success, '');
     } catch (error) {
-      return 'Failed to send email';
+      return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }
   }
 
   // 根据收件者Id获取信息
-  @Get(':receiveId')
-  async findByReceiveId(@Param('receiveId') receiveId: string) {
+  @Get()
+  async findByReceiveId(@Req() req) {
     try {
-      const data = await this.noticeService.findByReceiveId(receiveId);
+      const data = await this.noticeService.findByReceiveId(req.userId);
       return new Result(Code.GET_OK, Message.Find_Success, data);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
@@ -74,7 +73,7 @@ export class NoticeController {
           `${user.realName}(${user.userId})阅读id为${id}的通知`
         )
         await this.handleLogService.create(handleLog);
-        return new Result(data.code, data.msg, null);
+        return new Result(Code.UPDATE_OK, data.msg, null);
       }
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);

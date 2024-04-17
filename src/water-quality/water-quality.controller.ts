@@ -45,7 +45,7 @@ export class WaterQualityController {
         const admins = await this.userService.getAdmin();
         for (const admin of admins) {
           // 查询所有超级管理员
-          await this.noticeService.sendEmail('system', admin.email, '水量报警', info);
+          await this.noticeService.sendEmail('system', admin.email, '水质报警', info);
           // 将信息存入数据库
           const notice = new CreateNoticeDto();
           notice.type = 'quality';
@@ -54,7 +54,6 @@ export class WaterQualityController {
           notice.receiveId = admin.userId;
           notice.time = new Date();
           const noticeInfo = await this.noticeService.create(notice);
-          console.log(noticeInfo);
           // 实时通知前端
           this.WebsocketGateway.sendNotificationToUser(admin.userId, noticeInfo);
         }
@@ -88,7 +87,6 @@ export class WaterQualityController {
   async getWaterQualityToBashboard() {
     try {
       const data = await this.waterQualityService.getWaterQualityToBashboard();
-      console.log(data);
       return new Result(Code.GET_OK, Message.Find_Success, data);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
@@ -114,10 +112,21 @@ export class WaterQualityController {
       const { result, info } = checkQuality(updateWaterQualityDto);
       if (!result) {
         // 向超级管理员发送信息
-        // 查询所有超级管理员
-        this.noticeService.sendEmail('system', '', '水质报警', info)
-        // 实时通知前端
-        this.WebsocketGateway.sendNotificationToUser('', '');
+        const admins = await this.userService.getAdmin();
+        for (const admin of admins) {
+          // 查询所有超级管理员
+          // await this.noticeService.sendEmail('system', admin.email, '水质报警', info);
+          // 将信息存入数据库
+          const notice = new CreateNoticeDto();
+          notice.type = 'quality';
+          notice.info = info;
+          notice.sendId = 'system';
+          notice.receiveId = admin.userId;
+          notice.time = new Date();
+          const noticeInfo = await this.noticeService.create(notice);
+          // 实时通知前端
+          this.WebsocketGateway.sendNotificationToUser(admin.userId, noticeInfo);
+        }
       }
       const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
