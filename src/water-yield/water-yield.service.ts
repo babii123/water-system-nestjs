@@ -43,7 +43,6 @@ export class WaterYieldService {
         isDel: false
       }
     });
-    console.log(id, waterYield);
     return waterYield;
   }
 

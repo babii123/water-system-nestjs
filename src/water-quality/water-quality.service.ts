@@ -93,7 +93,6 @@ export class WaterQualityService {
 
   async getWaterQualityToBashboard() {
     const allData = await this.findAll([UserRole.ADMIN]);
-    console.log(allData);
     let phGood = 0, phBad = 0,
       turbidityGood = 0, turbidityBad = 0,
       fluorideGood = 0, fluorideBad = 0,

@@ -54,7 +54,6 @@ export class WaterYieldController {
           notice.receiveId = admin.userId;
           notice.time = new Date();
           const noticeInfo = await this.noticeService.create(notice);
-          console.log(noticeInfo);
           // 实时通知前端
           this.WebsocketGateway.sendNotificationToUser(admin.userId, noticeInfo);
         }

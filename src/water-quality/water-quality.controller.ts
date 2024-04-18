@@ -41,10 +41,10 @@ export class WaterQualityController {
       // 判断是否符合水质标准，不符合则报警
       const { result, info } = checkQuality(createWaterQualityDto);
       if (!result) {
-        // 向超级管理员发送信息
+        // 查询所有超级管理员
         const admins = await this.userService.getAdmin();
         for (const admin of admins) {
-          // 查询所有超级管理员
+          // 向超级管理员发送信息
           await this.noticeService.sendEmail('system', admin.email, '水质报警', info);
           // 将信息存入数据库
           const notice = new CreateNoticeDto();
@@ -115,7 +115,7 @@ export class WaterQualityController {
         const admins = await this.userService.getAdmin();
         for (const admin of admins) {
           // 查询所有超级管理员
-          // await this.noticeService.sendEmail('system', admin.email, '水质报警', info);
+          await this.noticeService.sendEmail('system', admin.email, '水质报警', info);
           // 将信息存入数据库
           const notice = new CreateNoticeDto();
           notice.type = 'quality';

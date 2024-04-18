@@ -10,6 +10,6 @@ export class CreateHandleLogDto {
     this.realName = realName;
     this.handle = handle;
     this.description = description;
-    this.time = new Date;
+    this.time = new Date();
   }
 }

@@ -4,7 +4,7 @@ import { UpdateSupplyPlanDto } from './dto/update-supply-plan.dto';
 import { In, Like, Repository } from 'typeorm';
 import { SupplyPlan } from './entities/supply-plan.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { deleteResult, updateResult } from 'src/Result/JudgeResult';
+import { updateResult } from 'src/Result/JudgeResult';
 import { UserRole } from 'src/user/entities/user.entity';
 import { Code } from 'src/Result/Code';
 import { Message } from 'src/Result/Message';
@@ -43,7 +43,7 @@ export class SupplyPlanService {
     const data = await this.supplyPlanrRepository.find({
       where: {
         waterArea: waterArea ? Like(`%${waterArea}%`) : undefined,
-        waterPriceType: waterPriceType ? waterPriceType : undefined,
+        waterPriceType: waterPriceType ? Like(`%${waterPriceType}%`) : undefined,
         isDel: false
       }
     })

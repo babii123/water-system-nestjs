@@ -67,7 +67,6 @@ export class WaterPriceController {
       const sheet = workbook.Sheets[sheetName];
       const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
       const { resPriceArr, info } = handleImportPrice(data);
-      console.log({ resPriceArr, info, data });
       if (resPriceArr) {
         this.waterPriceService.uploadFile(resPriceArr);
         const user = await this.userService.findOne(req.userId);

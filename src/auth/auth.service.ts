@@ -62,11 +62,9 @@ export class AuthService {
       oldPassword,
       userInfo.password,
     );
-    console.log(oldPassword, userInfo.password, isEqual);
     if (!isEqual) throw new UnauthorizedException('Password is incorrect');
     // 将新密码加盐存入数据库
     const hashedPassword = await this.hashingService.hash(newPassword);
-    console.log(hashedPassword);
     const data = await this.user.update(
       { userId },
       {

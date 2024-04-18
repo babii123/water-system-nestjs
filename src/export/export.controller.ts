@@ -39,6 +39,7 @@ export class ExportController {
   @Public()
   @Get('excel/:type')
   async exportToExcel(@Res() res: Response, @Param('type') type: string, @Req() req) {
+    const user = await this.userService.findOne(req.userId);
     let data = []
     switch (type) {
       case 'user':
@@ -48,16 +49,16 @@ export class ExportController {
         data = await this.waterTypeService.findAll();
         break;
       case 'waterQuality':
-        data = await this.waterQualityService.findAll();
+        data = await this.waterQualityService.findAll(user.roles);
         break;
       case 'supplyPlan':
-        data = await this.supplyPlanService.findAll();
+        data = await this.supplyPlanService.findAll(user.roles);
         break;
       case 'water':
-        data = await this.waterService.findAll();
+        data = await this.waterService.findAll(user.roles);
         break;
       case 'waterYield':
-        data = await this.waterYieldService.findAll();
+        data = await this.waterYieldService.findAll(user.roles);
         break;
       case 'waterPrice':
         data = await this.waterPriceService.findAll();
@@ -65,7 +66,6 @@ export class ExportController {
         data = await this.handleLogService.findAll();
         break;
     }
-    const user = await this.userService.findOne(req.userId);
     const handleLog = new CreateHandleLogDto(
       user.userId,
       user.realName,

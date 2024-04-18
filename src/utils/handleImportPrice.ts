@@ -4,7 +4,6 @@ function handleImportPrice(data) {
   let idIndex, typeIndex, basicPriceIndex, resourceCostIndex, pollutionCostIndex, realPriceIndex;
   // 获取每列的index
   data[0].forEach((head, index) => {
-    console.log(head);
     if (head === 'ID') {
       idIndex = index;
     } else if (head === '类型') {
@@ -22,7 +21,6 @@ function handleImportPrice(data) {
 
   // 判断是不是每一列都有
   if (!typeIndex || !basicPriceIndex || !resourceCostIndex || !pollutionCostIndex || !realPriceIndex) {
-    console.log(idIndex, typeIndex, basicPriceIndex, resourceCostIndex, pollutionCostIndex, realPriceIndex);
     return { resPriceArr: null, info: '数据信息不全' };
   }
   let resPriceArr: { [key: string]: CreateWaterPriceDto } = {
