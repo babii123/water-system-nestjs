@@ -32,10 +32,10 @@ export class WaterController {
 
   @ApiOperation({ summary: '新增水资源', description: '' })
   @Post()
-  async create(@Body() createWaterDto: CreateWaterDto,@Req() req) {
+  async create(@Body() createWaterDto: CreateWaterDto, @Req() req) {
     try {
-      const data = await this.waterService.create(createWaterDto);
       const user = await this.userService.findOne(req.userId);
+      const data = await this.waterService.create({ ...createWaterDto, addUser: user.realName });
       const handleLog = new CreateHandleLogDto(
         user.userId,
         user.realName,

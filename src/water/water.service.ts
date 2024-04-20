@@ -35,8 +35,9 @@ export class WaterService {
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} water`;
+  async findOne(id: number) {
+    const water = await this.waterRepository.findOne({ where: { id } });
+    return water;
   }
 
   async findByCondition(waterArea?: string, waterType?: string) {

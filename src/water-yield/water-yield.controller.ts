@@ -23,6 +23,7 @@ import { HandleLogService } from 'src/handle-log/handle-log.service';
 import { CreateHandleLogDto } from 'src/handle-log/dto/create-handle-log.dto';
 import { UserRole } from 'src/user/entities/user.entity';
 import { WebsocketGateway } from 'src/websocket/websocket.gateway'
+import { WaterService } from 'src/water/water.service';
 
 @Controller('water-yield')
 export class WaterYieldController {
@@ -32,24 +33,28 @@ export class WaterYieldController {
     private readonly userService: UserService,
     private readonly handleLogService: HandleLogService,
     private readonly WebsocketGateway: WebsocketGateway,
+    private readonly waterService: WaterService,
   ) { }
 
   @Post()
   async create(@Body() createWaterYieldDto: CreateWaterYieldDto, @Req() req) {
     try {
-      const data = await this.waterYieldService.create(createWaterYieldDto);
+      const user = await this.userService.findOne(req.userId);
+      const data = await this.waterYieldService.create({ ...createWaterYieldDto, addUser: user.realName });
       // 判断是否符合水量标准，不符合则报警
       const { result, info } = checkYield(createWaterYieldDto);
+      const water = await this.waterService.findOne(createWaterYieldDto.resourceId);
+      const waterInfo = `${water.waterName} - ${water.id}(水资源ID)`;
       if (!result) {
         // 向超级管理员发送信息
         const admins = await this.userService.getAdmin();
         for (const admin of admins) {
           // 查询所有超级管理员
-          await this.noticeService.sendEmail('system', admin.email, '水量报警', info);
+          await this.noticeService.sendEmail('system', admin.email, `水量报警 - ${waterInfo}`, `* 水资源信息：${waterInfo}\n${info}`);
           // 将信息存入数据库
           const notice = new CreateNoticeDto();
-          notice.type = 'yield';
-          notice.info = info;
+          notice.type = `水量报警 - ${waterInfo}`;
+          notice.info = `* 水资源信息：${waterInfo}\n${info}`;
           notice.sendId = 'system';
           notice.receiveId = admin.userId;
           notice.time = new Date();
@@ -58,7 +63,6 @@ export class WaterYieldController {
           this.WebsocketGateway.sendNotificationToUser(admin.userId, noticeInfo);
         }
       }
-      const user = await this.userService.findOne(req.userId);
       const handleLog = new CreateHandleLogDto(
         user.userId,
         user.realName,
@@ -113,16 +117,18 @@ export class WaterYieldController {
       const data = await this.waterYieldService.update(+id, updateWaterYieldDto);
       // 判断是否符合水量标准，不符合则报警
       const { result, info } = checkYield(updateWaterYieldDto);
+      const water = await this.waterService.findOne(updateWaterYieldDto.resourceId);
+      const waterInfo = `${water.waterName} - ${water.id}(水资源ID)`;
       if (!result) {
         // 向超级管理员发送信息
         const admins = await this.userService.getAdmin();
         for (const admin of admins) {
           // 查询所有超级管理员
-          await this.noticeService.sendEmail('system', admin.email, '水量报警', info);
+          await this.noticeService.sendEmail('system', admin.email, `水量报警 - ${waterInfo}`, `* 水资源信息：${waterInfo}\n${info}`);
           // 将信息存入数据库
           const notice = new CreateNoticeDto();
-          notice.type = 'yield';
-          notice.info = info;
+          notice.type = `水量报警 - ${waterInfo}`;
+          notice.info = `* 水资源信息：${waterInfo}\n${info}`;
           notice.sendId = 'system';
           notice.receiveId = admin.userId;
           notice.time = new Date();
@@ -139,7 +145,7 @@ export class WaterYieldController {
         `${user.realName}(${user.userId})修改id为${id}的水量信息`
       )
       await this.handleLogService.create(handleLog);
-      return new Result(data.code, data.msg, null);
+      return new Result(Code.UPDATE_OK, Message.Change_Success, null);
     } catch (error) {
       return new Result(Code.SYSTEM_UNKNOW_ERR, Message.Request_Fail, error);
     }

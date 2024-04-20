@@ -5,9 +5,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { WaterQuality } from './entities/water-quality.entity';
 import { NoticeModule } from 'src/notice/notice.module';
 import { WebsocketGateway } from 'src/websocket/websocket.gateway'
+import { WaterModule } from 'src/water/water.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([WaterQuality]), NoticeModule],
+  imports: [TypeOrmModule.forFeature([WaterQuality]), NoticeModule, WaterModule],
   controllers: [WaterQualityController],
   providers: [WaterQualityService, WebsocketGateway],
   exports: [WaterQualityService]

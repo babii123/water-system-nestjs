@@ -62,6 +62,7 @@ export class ExportController {
         break;
       case 'waterPrice':
         data = await this.waterPriceService.findAll();
+        break;
       case 'handleLog':
         data = await this.handleLogService.findAll();
         break;
